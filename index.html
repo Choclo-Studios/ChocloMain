@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choclo Studios | Digital Creative Lab</title>
+    <link rel="icon" type="image/png" href="Choclo_V0.1_BG__2_-removebg-preview.png">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+/* ===== RESET ===== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --bg: #050508;
+    --bg2: #0a0a14;
+    --green: #00ff88;
+    --cyan: #00e5ff;
+    --purple: #bf5fff;
+    --yellow: #ffd700;
+    --pink: #ff00aa;
+    --glass: rgba(255,255,255,0.035);
+    --glass-b: rgba(255,255,255,0.09);
+    --text: #e0e0f0;
+    --muted: #9090b8;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Space Grotesk', sans-serif;
+    --display: 'Orbitron', monospace;
+}
+
+html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--green) var(--bg); }
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--green); }
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    overflow-x: hidden;
+    line-height: 1.6;
+}
+
+/* ===== BACKGROUND LAYER ===== */
+#particle-canvas {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0; pointer-events: none;
+}
+
+.orb {
+    position: fixed; border-radius: 50%;
+    filter: blur(120px); pointer-events: none; z-index: 0;
+}
+.orb-1 { width: 700px; height: 700px; background: radial-gradient(circle, rgba(0,255,136,0.05), transparent 70%); top: -300px; right: -200px; }
+.orb-2 { width: 600px; height: 600px; background: radial-gradient(circle, rgba(191,95,255,0.05), transparent 70%); bottom: 10%; left: -200px; }
+.orb-3 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(0,229,255,0.04), transparent 70%); top: 45%; left: 40%; }
+
+.noise {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 0; opacity: 0.6;
+}
+
+/* ===== NAV ===== */
+nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 0 3rem;
+    height: 68px;
+    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+    background: rgba(5,5,8,0.82);
+    backdrop-filter: blur(28px);
+    transition: height 0.3s, background 0.3s;
+}
+nav::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent 0%, var(--green) 25%, var(--cyan) 50%, var(--purple) 75%, transparent 100%);
+    background-size: 200% 100%;
+    animation: nav-line 4s linear infinite;
+}
+@keyframes nav-line {
+    0%   { background-position: 100% 0; }
+    100% { background-position: -100% 0; }
+}
+nav.scrolled { height: 56px; background: rgba(5,5,8,0.95); }
+
+.nav-logo {
+    display: flex; align-items: center; gap: 0.65rem; cursor: pointer;
+}
+.nav-logo-img {
+    width: 34px; height: 34px; object-fit: contain;
+    filter: drop-shadow(0 0 6px rgba(0,255,136,0.4));
+    transition: filter 0.3s, transform 0.3s;
+}
+.nav-logo:hover .nav-logo-img {
+    filter: drop-shadow(0 0 14px rgba(0,255,136,0.8));
+    transform: rotate(-5deg) scale(1.05);
+}
+.nav-logo-text {
+    font-family: var(--display); font-size: 0.88rem; font-weight: 900;
+    background: linear-gradient(135deg, var(--green), var(--cyan));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; letter-spacing: 3px; line-height: 1;
+}
+
+.nav-links {
+    display: flex; gap: 0.25rem; list-style: none;
+}
+.nav-links a {
+    font-family: var(--mono); font-size: 0.72rem; color: var(--muted);
+    text-decoration: none; letter-spacing: 1px; transition: all 0.25s;
+    padding: 0.4rem 0.9rem; border-radius: 6px;
+    border: 1px solid transparent;
+    position: relative;
+}
+.nav-links a:hover {
+    color: var(--green);
+    background: rgba(0,255,136,0.06);
+    border-color: rgba(0,255,136,0.18);
+}
+.nav-links a.active {
+    color: var(--green);
+    background: rgba(0,255,136,0.08);
+    border-color: rgba(0,255,136,0.25);
+}
+
+.nav-right { display: flex; justify-content: flex-end; }
+.nav-cta {
+    font-family: var(--mono); font-size: 0.72rem; letter-spacing: 1px;
+    padding: 0.5rem 1.3rem; border-radius: 8px; cursor: pointer;
+    text-decoration: none; border: 1px solid rgba(0,255,136,0.4);
+    color: var(--green); background: rgba(0,255,136,0.06);
+    transition: all 0.25s; display: flex; align-items: center; gap: 0.4rem;
+}
+.nav-cta:hover {
+    background: rgba(0,255,136,0.14);
+    border-color: var(--green);
+    box-shadow: 0 0 20px rgba(0,255,136,0.2);
+    transform: translateY(-1px);
+}
+
+/* ===== COMMON ===== */
+section { position: relative; z-index: 1; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+.section-pad { padding: 9rem 0; }
+
+.section-header { text-align: center; margin-bottom: 4.5rem; }
+.section-tag {
+    font-family: var(--mono); font-size: 0.7rem; letter-spacing: 4px;
+    color: var(--green); text-transform: uppercase; margin-bottom: 1rem;
+    display: block;
+}
+.section-title {
+    font-family: var(--display); font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 700; line-height: 1.1;
+    background: linear-gradient(135deg, #fff 0%, rgba(224,224,240,0.7) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.section-sub { color: var(--muted); font-size: 0.95rem; margin-top: 0.8rem; font-weight: 300; }
+
+.sep { height: 1px; background: linear-gradient(90deg, transparent, var(--glass-b) 30%, var(--glass-b) 70%, transparent); margin: 0 3rem; }
+
+.reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.9s cubic-bezier(0.16,1,0.3,1), transform 0.9s cubic-bezier(0.16,1,0.3,1); }
+.revealed { opacity: 1; transform: translateY(0); }
+
+/* ===== HERO ===== */
+#hero {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center;
+    padding: 8rem 2rem 6rem; overflow: hidden;
+}
+
+.hero-logo {
+    width: clamp(100px, 18vw, 180px); margin-bottom: 1.5rem;
+    animation: slideDown 0.8s ease both;
+    filter: drop-shadow(0 0 30px rgba(0,255,136,0.3));
+}
+
+.hero-badge {
+    font-family: var(--mono); font-size: 0.7rem; letter-spacing: 4px;
+    color: var(--green); background: rgba(0,255,136,0.08);
+    border: 1px solid rgba(0,255,136,0.25); padding: 0.4rem 1.4rem;
+    border-radius: 50px; margin-bottom: 2.5rem;
+    animation: slideDown 0.8s ease both;
+}
+
+.hero-title {
+    font-family: var(--display);
+    font-size: clamp(4rem, 12vw, 9rem);
+    font-weight: 900; line-height: 0.95;
+    margin-bottom: 1.8rem;
+    animation: slideUp 0.8s ease 0.15s both;
+}
+.ht1 {
+    display: block;
+    background: linear-gradient(135deg, #ffffff 0%, var(--cyan) 60%, var(--green) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    position: relative;
+}
+.ht2 {
+    display: block;
+    background: linear-gradient(135deg, var(--green) 0%, var(--yellow) 50%, var(--purple) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+
+.hero-sub {
+    font-size: 1.15rem; color: var(--muted); max-width: 560px;
+    margin-bottom: 3rem; font-weight: 300;
+    animation: slideUp 0.8s ease 0.3s both;
+}
+.hero-sub em { color: var(--cyan); font-style: normal; }
+
+.hero-btns {
+    display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;
+    animation: slideUp 0.8s ease 0.45s both;
+}
+
+.btn {
+    font-family: var(--mono); font-size: 0.82rem; letter-spacing: 0.5px;
+    padding: 0.9rem 2.2rem; border-radius: 8px; cursor: pointer;
+    transition: all 0.3s; text-decoration: none; display: inline-flex;
+    align-items: center; gap: 0.5rem; border: none;
+}
+.btn-primary {
+    background: linear-gradient(135deg, var(--green), var(--cyan));
+    color: #030305; font-weight: 700;
+}
+.btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,255,136,0.35); }
+.btn-ghost {
+    background: var(--glass); color: var(--text);
+    border: 1px solid var(--glass-b); backdrop-filter: blur(10px);
+}
+.btn-ghost:hover { border-color: var(--purple); color: var(--purple); transform: translateY(-3px); box-shadow: 0 12px 30px rgba(191,95,255,0.15); }
+
+.hero-stats {
+    display: flex; gap: 3.5rem; margin-top: 5rem; flex-wrap: wrap; justify-content: center;
+    animation: slideUp 0.8s ease 0.6s both;
+}
+.stat { text-align: center; }
+.stat-n {
+    font-family: var(--display); font-size: 2rem; font-weight: 700;
+    background: linear-gradient(135deg, var(--green), var(--cyan));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.stat-l { font-family: var(--mono); font-size: 0.62rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 0.2rem; }
+.stat-n.secret { user-select: none; }
+
+.hero-floats { position: absolute; inset: 0; pointer-events: none; }
+.hf {
+    position: absolute; border: 1px solid var(--glass-b); background: var(--glass);
+    backdrop-filter: blur(12px); border-radius: 10px; padding: 0.8rem 1.2rem;
+    font-family: var(--mono); font-size: 0.68rem; animation: float linear infinite;
+}
+.hf-1 { top: 22%; left: 4%; color: var(--green); border-color: rgba(0,255,136,0.25); animation-duration: 7s; animation-delay: 0s; }
+.hf-2 { top: 38%; right: 4%; color: var(--cyan); border-color: rgba(0,229,255,0.25); animation-duration: 9s; animation-delay: -2s; }
+.hf-3 { bottom: 28%; left: 6%; color: var(--purple); border-color: rgba(191,95,255,0.25); animation-duration: 8s; animation-delay: -4s; }
+.hf-4 { bottom: 32%; right: 6%; color: var(--yellow); border-color: rgba(255,215,0,0.25); animation-duration: 6s; animation-delay: -1s; }
+.hf .hfl { font-size: 0.6rem; margin-top: 0.3rem; opacity: 0.7; }
+
+.hero-scroll {
+    position: absolute; bottom: 2.5rem; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+    animation: fadeIn 1s ease 1.2s both;
+}
+.hero-scroll span { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 3px; color: var(--muted); }
+.scroll-bar { width: 1px; height: 45px; background: linear-gradient(to bottom, var(--green), transparent); animation: scrollPulse 2s ease-in-out infinite; }
+
+/* ===== TERMINAL ===== */
+#terminal { padding: 9rem 0; }
+
+.terminal-box {
+    max-width: 820px; margin: 0 auto;
+    background: rgba(4,4,10,0.92);
+    border: 1px solid rgba(0,255,136,0.18);
+    border-radius: 18px; overflow: hidden;
+    box-shadow: 0 0 80px rgba(0,255,136,0.04), 0 40px 80px rgba(0,0,0,0.6);
+    backdrop-filter: blur(20px);
+}
+
+.t-header {
+    background: rgba(255,255,255,0.025);
+    padding: 1rem 1.5rem;
+    display: flex; align-items: center; gap: 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.t-dots { display: flex; gap: 6px; }
+.td { width: 12px; height: 12px; border-radius: 50%; }
+.td-r { background: #ff5f56; } .td-y { background: #ffbd2e; } .td-g { background: #27c93f; }
+.t-title { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); flex: 1; text-align: center; }
+
+.t-body {
+    padding: 1.5rem; min-height: 380px; max-height: 520px;
+    font-family: var(--mono); font-size: 0.82rem; line-height: 1.9;
+    overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(0,255,136,0.3) transparent;
+}
+
+.t-out { padding-left: 0; margin-bottom: 1px; }
+.t-out.s { color: var(--green); }
+.t-out.e { color: #ff4455; }
+.t-out.i { color: var(--cyan); }
+.t-out.w { color: var(--yellow); }
+.t-out.d { color: var(--muted); }
+
+.t-input-row { display: flex; gap: 0.6rem; align-items: center; margin-top: 0.3rem; }
+.t-prompt { color: var(--green); white-space: nowrap; user-select: none; }
+#t-input {
+    background: transparent; border: none; outline: none;
+    color: var(--text); font-family: var(--mono); font-size: 0.82rem;
+    flex: 1; caret-color: var(--green);
+}
+
+/* ===== TEAM ===== */
+.team-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+    gap: 1.4rem;
+}
+
+.team-card {
+    background: var(--glass); border: 1px solid var(--glass-b);
+    border-radius: 20px; padding: 2rem; cursor: pointer;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    position: relative; overflow: hidden;
+    transform-style: preserve-3d; perspective: 800px;
+}
+.team-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--ca, var(--green)), transparent);
+    opacity: 0; transition: opacity 0.3s;
+}
+.team-card::after {
+    content: ''; position: absolute;
+    width: 200px; height: 200px; border-radius: 50%;
+    background: radial-gradient(circle, var(--ca, var(--green)) 0%, transparent 70%);
+    opacity: 0; transition: opacity 0.4s; pointer-events: none;
+    top: -100px; right: -100px;
+}
+.team-card:hover::before { opacity: 1; }
+.team-card:hover::after { opacity: 0.06; }
+.team-card:hover { border-color: var(--ca, var(--green)); box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+
+.c-avatar {
+    width: 76px; height: 76px; border-radius: 50%;
+    margin-bottom: 1.5rem; border: 2px solid var(--ca, var(--glass-b));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.8rem; position: relative; overflow: hidden;
+    background: var(--cg, linear-gradient(135deg, var(--green), var(--cyan)));
+    color: #030305;
+}
+.c-avatar-img {
+    width: 100%; height: 100%; object-fit: cover;
+    border-radius: 50%; display: block;
+}
+.c-name { font-size: 1.15rem; font-weight: 600; margin-bottom: 0.25rem; }
+.c-codename {
+    font-family: var(--mono); font-size: 0.62rem; letter-spacing: 2px;
+    color: var(--ca, var(--green)); background: rgba(0,255,136,0.07);
+    border: 1px solid rgba(0,255,136,0.2); border-color: var(--ca, var(--green));
+    opacity: 0.8;
+    display: inline-block; padding: 0.15rem 0.55rem; border-radius: 4px;
+    margin-bottom: 0.4rem;
+}
+.c-role { font-family: var(--mono); font-size: 0.72rem; color: var(--ca, var(--green)); letter-spacing: 1px; margin-bottom: 1rem; }
+.c-bio { font-size: 0.83rem; color: var(--muted); margin-bottom: 1.2rem; line-height: 1.65; }
+.c-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 1.4rem; }
+.c-tag {
+    font-family: var(--mono); font-size: 0.62rem; padding: 0.22rem 0.55rem;
+    border-radius: 4px; background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08); color: var(--muted);
+}
+.c-links { display: flex; gap: 1rem; }
+.c-link {
+    font-family: var(--mono); font-size: 0.68rem; color: var(--muted);
+    text-decoration: none; transition: color 0.3s; display: flex; align-items: center; gap: 0.35rem;
+}
+.c-link:hover { color: var(--ca, var(--green)); }
+
+.team-card.card-link::after {
+    content: '↗'; position: absolute; top: 1.2rem; right: 1.2rem;
+    font-size: 0.8rem; color: var(--ca, var(--green)); opacity: 0;
+    transition: opacity 0.3s;
+}
+.team-card.card-link:hover::after { opacity: 0.7; }
+
+/* ===== PROJECTS BENTO ===== */
+.bento {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: 280px; gap: 1rem;
+}
+.bc {
+    background: var(--glass); border: 1px solid var(--glass-b);
+    border-radius: 20px; padding: 2rem; position: relative;
+    overflow: hidden; cursor: pointer; transition: all 0.4s;
+    display: flex; flex-direction: column;
+}
+.bc::after {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(255,255,255,0.04), transparent 55%);
+    opacity: 0; transition: opacity 0.3s; pointer-events: none;
+}
+.bc:hover::after { opacity: 1; }
+.bc:hover { border-color: rgba(255,255,255,0.16); box-shadow: 0 20px 60px rgba(0,0,0,0.6); transform: translateY(-2px); }
+.bc-w2 { grid-column: span 2; }
+.bc-h2 { grid-row: span 2; }
+
+.p-glow {
+    position: absolute; width: 200px; height: 200px; border-radius: 50%;
+    background: radial-gradient(circle, var(--pc, var(--green)) 0%, transparent 70%);
+    opacity: 0.04; top: -80px; right: -80px; transition: opacity 0.4s; pointer-events: none;
+}
+.bc:hover .p-glow { opacity: 0.12; }
+
+.p-cat { font-family: var(--mono); font-size: 0.63rem; letter-spacing: 2px; color: var(--pc, var(--green)); text-transform: uppercase; margin-bottom: 0.7rem; }
+.p-body {
+    flex: 1; display: flex; flex-direction: column;
+    filter: blur(3px); opacity: 0.35;
+    pointer-events: none; user-select: none;
+}
+.p-title { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.6rem; }
+.p-desc { font-size: 0.8rem; color: var(--muted); line-height: 1.6; flex: 1; }
+.p-preview {
+    width: 100%; border-radius: 12px; margin: 1.2rem 0 0.8rem;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--pp, rgba(0,255,136,0.08)); flex: 0 0 auto;
+    height: 90px; position: relative; overflow: hidden;
+}
+.bc-h2 .p-preview { height: 160px; }
+.bc-w2 .p-preview { height: 100px; }
+.p-preview-icon { font-size: 2.5rem; opacity: 0.25; }
+.p-preview-lines {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 40px;
+    background: linear-gradient(to top, var(--bg), transparent);
+}
+.p-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: auto; padding-top: 0.6rem; }
+.p-tag {
+    font-family: var(--mono); font-size: 0.6rem; padding: 0.18rem 0.5rem;
+    border-radius: 3px; border: 1px solid var(--pc, var(--green));
+    color: var(--pc, var(--green)); opacity: 0.65;
+}
+.p-wip {
+    position: absolute; top: 1.1rem; right: 1.1rem;
+    font-family: var(--mono); font-size: 0.58rem; letter-spacing: 1px;
+    color: var(--yellow); background: rgba(255,215,0,0.08);
+    border: 1px solid rgba(255,215,0,0.3); padding: 0.2rem 0.6rem;
+    border-radius: 4px; white-space: nowrap;
+}
+
+/* ===== TECH ORBIT ===== */
+#orbit-stage {
+    position: relative; width: 520px; height: 520px;
+    margin: 0 auto;
+}
+.orbit-ring-v {
+    position: absolute; top: 50%; left: 50%;
+    border-radius: 50%; border: 1px solid rgba(255,255,255,0.05);
+    pointer-events: none;
+}
+.orbit-center {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    width: 110px; height: 110px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,255,136,0.1) 0%, rgba(0,229,255,0.05) 50%, transparent 70%);
+    border: 1px solid rgba(0,255,136,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--display); font-size: 0.55rem; color: var(--green);
+    letter-spacing: 2px; text-align: center; z-index: 2;
+    box-shadow: 0 0 40px rgba(0,255,136,0.08) inset;
+}
+
+.orbit-icon {
+    position: absolute; width: 52px; height: 52px; border-radius: 50%;
+    background: rgba(10,10,20,0.9); border: 1px solid var(--glass-b);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.3s; backdrop-filter: blur(10px);
+    transform: translate(-50%, -50%); z-index: 3;
+}
+.orbit-icon:hover {
+    transform: translate(-50%,-50%) scale(1.35);
+    border-color: var(--ic, var(--green));
+    box-shadow: 0 0 25px var(--ic, var(--green)), 0 0 60px rgba(0,0,0,0.8);
+    z-index: 10;
+}
+.orbit-icon .oi { font-size: 1.1rem; line-height: 1; }
+.orbit-icon .ol {
+    font-family: var(--mono); font-size: 0.5rem; color: var(--muted);
+    white-space: nowrap; opacity: 0; transition: opacity 0.3s;
+    position: absolute; top: 120%; left: 50%; transform: translateX(-50%);
+    background: rgba(5,5,8,0.9); border: 1px solid var(--glass-b);
+    padding: 2px 6px; border-radius: 4px; pointer-events: none;
+}
+.orbit-icon:hover .ol { opacity: 1; }
+
+/* ===== FOOTER ===== */
+footer {
+    padding: 5rem 0 3rem; border-top: 1px solid var(--glass-b);
+    position: relative; z-index: 1;
+}
+.f-inner {
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 2rem; margin-bottom: 3rem;
+}
+.f-logo {
+    font-family: var(--display); font-size: 1.1rem; font-weight: 900;
+    background: linear-gradient(135deg, var(--green), var(--cyan));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.f-tag { font-family: var(--mono); font-size: 0.68rem; color: var(--muted); margin-top: 0.3rem; }
+.f-links { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+.f-link {
+    font-family: var(--mono); font-size: 0.75rem; color: var(--muted);
+    text-decoration: none; transition: color 0.3s; display: flex; align-items: center; gap: 0.4rem;
+}
+.f-link:hover { color: var(--green); }
+.f-copy { font-family: var(--mono); font-size: 0.62rem; color: var(--muted); opacity: 0.4; text-align: center; }
+
+/* ===== MASCOT ===== */
+#mascot {
+    position: fixed; bottom: 2rem; right: 2rem; z-index: 200;
+    cursor: pointer; opacity: 0; transform: translateY(20px) scale(0.8);
+    transition: all 0.6s cubic-bezier(0.16,1,0.3,1);
+}
+#mascot.vis { opacity: 1; transform: translateY(0) scale(1); }
+#mascot-img {
+    display: block; width: 80px; image-rendering: pixelated;
+    animation: mascot-bob 3s ease-in-out infinite;
+    filter: drop-shadow(0 0 8px rgba(0,255,136,0.4));
+}
+#mascot:hover #mascot-img { animation: mascot-wave 0.6s ease-in-out infinite; }
+@keyframes mascot-bob {
+    0%,100% { transform: translateY(0); }
+    50%      { transform: translateY(-8px); }
+}
+@keyframes mascot-wave {
+    0%,100% { transform: translateY(0) rotate(0deg); }
+    25%     { transform: translateY(-4px) rotate(-10deg); }
+    75%     { transform: translateY(-4px) rotate(10deg); }
+}
+.m-tip {
+    position: absolute; bottom: calc(100% + 8px); right: 0;
+    background: rgba(4,4,10,0.95); border: 1px solid rgba(0,255,136,0.3);
+    border-radius: 8px; padding: 0.5rem 0.9rem;
+    font-family: var(--mono); font-size: 0.65rem; color: var(--green);
+    white-space: nowrap; opacity: 0; transform: translateY(5px);
+    transition: all 0.3s; backdrop-filter: blur(10px);
+}
+#mascot:hover .m-tip { opacity: 1; transform: translateY(0); }
+
+/* ===== GLITCH ===== */
+#glitch-layer {
+    position: fixed; inset: 0; z-index: 9998; pointer-events: none;
+    background: repeating-linear-gradient(transparent 0, transparent 2px, rgba(0,255,136,0.015) 2px, rgba(0,255,136,0.015) 4px);
+    opacity: 0;
+}
+#glitch-layer.flash { animation: glitch-flash 0.4s ease forwards; }
+
+/* ===== ANIMATIONS ===== */
+@keyframes slideDown { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
+@keyframes slideUp   { from { opacity:0; transform:translateY(24px);  } to { opacity:1; transform:translateY(0); } }
+@keyframes fadeIn    { from { opacity:0; } to { opacity:1; } }
+@keyframes float     { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
+@keyframes scrollPulse { 0%,100%{opacity:1} 50%{opacity:0.25} }
+@keyframes blink     { 0%,100%{opacity:1} 50%{opacity:0} }
+@keyframes glitch-flash {
+    0%{opacity:0} 15%{opacity:1;filter:hue-rotate(90deg)} 30%{opacity:0}
+    50%{opacity:0.6;filter:hue-rotate(-90deg) brightness(2)} 100%{opacity:0}
+}
+@keyframes spin-cw   { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+@keyframes spin-ccw  { from{transform:rotate(0deg)} to{transform:rotate(-360deg)} }
+@keyframes ping      { 0%{transform:scale(1);opacity:0.8} 100%{transform:scale(2.5);opacity:0} }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 900px) {
+    nav { padding: 1rem 1.5rem; }
+    .nav-links { display: none; }
+    .bento { grid-template-columns: 1fr 1fr; grid-auto-rows: 240px; }
+    .bc-w2 { grid-column: span 2; }
+    .bc-h2 { grid-row: span 1; }
+    #orbit-stage { width: 340px; height: 340px; }
+}
+@media (max-width: 600px) {
+    .bento { grid-template-columns: 1fr; grid-auto-rows: auto; }
+    .bc-w2 { grid-column: span 1; }
+    .hf-1, .hf-2, .hf-3, .hf-4 { display: none; }
+    #orbit-stage { width: 290px; height: 290px; }
+    .hero-stats { gap: 2rem; }
+    .f-inner { flex-direction: column; text-align: center; }
+}
+    </style>
+</head>
+<body>
+
+<div id="glitch-layer"></div>
+<div class="noise"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+<canvas id="particle-canvas"></canvas>
+
+<!-- NAV -->
+<nav id="nav">
+    <div class="nav-logo" onclick="scrollTo({top:0,behavior:'smooth'})">
+        <img src="Choclo_V0.1_BG__2_-removebg-preview.png" alt="Choclo Studios" class="nav-logo-img">
+        <span class="nav-logo-text">CHOCLO STUDIOS</span>
+    </div>
+    <ul class="nav-links">
+        <li><a href="#hero">Inicio</a></li>
+        <li><a href="#terminal">Terminal</a></li>
+        <li><a href="#team">Equipo</a></li>
+        <li><a href="#projects">Proyectos</a></li>
+        <li><a href="#stack">Stack</a></li>
+    </ul>
+    <div class="nav-right">
+        <a href="mailto:" class="nav-cta">✉ Contacto</a>
+    </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+    <div class="hero-floats" aria-hidden="true">
+        <div class="hf hf-1">
+            <div>→ npm run build</div>
+            <div class="hfl" style="color:var(--green)">✓ compiled in 142ms</div>
+        </div>
+        <div class="hf hf-2">
+            <div>→ deploying to us-east-1</div>
+            <div class="hfl" style="color:var(--cyan)">⬡ lambda ready</div>
+        </div>
+        <div class="hf hf-3">
+            <div>→ git push origin main</div>
+            <div class="hfl" style="color:var(--purple)">⬡ pipeline OK</div>
+        </div>
+        <div class="hf hf-4">
+            <div>→ AI model: loaded</div>
+            <div class="hfl" style="color:var(--yellow)">⚡ 99.9% uptime</div>
+        </div>
+    </div>
+
+    <img src="Choclo_V0.1_BG__2_-removebg-preview.png" alt="Choclo Studios Logo" class="hero-logo">
+
+    <div class="hero-badge">⬡ &nbsp;DIGITAL CREATIVE LAB &nbsp;⬡</div>
+
+    <h1 class="hero-title">
+        <span class="ht1">CHOCLO</span>
+        <span class="ht2">STUDIOS</span>
+    </h1>
+
+    <p class="hero-sub">
+        Construimos <em>experiencias digitales modernas</em> que empujan los límites de lo posible en la web y más allá.
+    </p>
+
+    <div class="hero-btns">
+        <a href="#projects" class="btn btn-primary">⬡ &nbsp;Ver Proyectos</a>
+        <a href="#team"     class="btn btn-ghost">◈ &nbsp;Conocer el Equipo</a>
+    </div>
+
+    <div class="hero-stats">
+        <div class="stat"><div class="stat-n secret" data-target="12">0</div><div class="stat-l">Proyectos Lanzados</div></div>
+        <div class="stat"><div class="stat-n" data-target="3">0</div><div class="stat-l">Miembros del Equipo</div></div>
+        <div class="stat"><div class="stat-n secret" data-target="3">0</div><div class="stat-l">Regiones AWS</div></div>
+        <div class="stat"><div class="stat-n secret" data-target="99">0</div><div class="stat-l">Commits / Mes</div></div>
+    </div>
+
+</section>
+
+<div class="sep"></div>
+
+<!-- TERMINAL -->
+<section id="terminal" style="padding: 9rem 0;">
+    <div class="container">
+        <div class="section-header reveal">
+            <span class="section-tag">// interactive</span>
+            <h2 class="section-title">Terminal Interactivo</h2>
+            <p class="section-sub">Escribe un comando para explorar Choclo Studios</p>
+        </div>
+        <div class="terminal-box reveal" style="transition-delay:0.1s" id="terminal-box">
+            <div class="t-header">
+                <div class="t-dots">
+                    <div class="td td-r"></div>
+                    <div class="td td-y"></div>
+                    <div class="td td-g"></div>
+                </div>
+                <div class="t-title">choclo@studio:~ — zsh</div>
+            </div>
+            <div class="t-body" id="t-body">
+                <div class="t-out i">Choclo Studios CLI v2.0.4 — Modo Interactivo</div>
+                <div class="t-out d">Escribe <span style="color:var(--green)">help</span> para ver los comandos disponibles. Usa ↑↓ para historial, Tab para autocompletar.</div>
+                <br>
+                <div class="t-input-row" id="t-input-row">
+                    <span class="t-prompt">choclo@studio:~$</span>
+                    <input type="text" id="t-input" spellcheck="false" autocomplete="off" placeholder="_">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="sep"></div>
+
+<!-- TEAM -->
+<section id="team" class="section-pad">
+    <div class="container">
+        <div class="section-header reveal">
+            <span class="section-tag">// humans.txt</span>
+            <h2 class="section-title">El Equipo</h2>
+            <p class="section-sub">Constructores apasionados. Enviamos código sin excusas. Amantes del choclo.</p>
+        </div>
+        <div class="team-grid" id="team-grid"></div>
+    </div>
+</section>
+
+<div class="sep"></div>
+
+<!-- PROJECTS -->
+<section id="projects" class="section-pad">
+    <div class="container">
+        <div class="section-header reveal">
+            <span class="section-tag">// shipped</span>
+            <h2 class="section-title">Proyectos</h2>
+            <p class="section-sub">Lo que hemos construido. Lo que estamos construyendo. Lo que soñamos.</p>
+        </div>
+        <div class="bento" id="bento"></div>
+    </div>
+</section>
+
+<div class="sep"></div>
+
+<!-- TECH STACK -->
+<section id="stack" class="section-pad">
+    <div class="container">
+        <div class="section-header reveal">
+            <span class="section-tag">// dependencies.json</span>
+            <h2 class="section-title">Tech Stack</h2>
+            <p class="section-sub">Las herramientas que impulsan nuestras creaciones.</p>
+        </div>
+        <div id="orbit-stage" class="reveal" style="transition-delay:0.2s">
+            <div class="orbit-ring-v" id="ov1"></div>
+            <div class="orbit-ring-v" id="ov2"></div>
+            <div class="orbit-ring-v" id="ov3"></div>
+            <div class="orbit-center">CORE<br>STACK</div>
+        </div>
+    </div>
+</section>
+
+<div class="sep"></div>
+
+<!-- FOOTER -->
+<footer>
+    <div class="container">
+        <div class="f-inner">
+            <div>
+                <div class="f-logo">CHOCLO STUDIOS</div>
+                <div class="f-tag">// construyendo el futuro, un commit a la vez</div>
+            </div>
+            <div class="f-links">
+                <a href="https://github.com/Choclo-Studios" class="f-link" target="_blank">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+                    GitHub
+                </a>
+                <a href="https://discord.com" class="f-link" target="_blank">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.04.03.05a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+                    Discord
+                </a>
+                <a href="https://linkedin.com" class="f-link" target="_blank">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                    LinkedIn
+                </a>
+                <a href="mailto:develoversgroup@gmail.com" class="f-link">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    Contacto
+                </a>
+            </div>
+        </div>
+        <p class="f-copy">© 2025 Choclo Studios. Todos los derechos reservados. &nbsp;·&nbsp; Hecho con ☕ y cantidades cuestionables de cafeína.</p>
+    </div>
+</footer>
+
+<!-- MASCOT -->
+<div id="mascot">
+    <div class="m-tip">¡Soy Choclito! Tócame ✨</div>
+    <img src="pixelChoclo.png" alt="Choclito" id="mascot-img">
+</div>
+
+<script>
+/* ===================================================
+CHOCLO STUDIOS — Main Script
+=================================================== */
+
+// ── Particle Canvas ──────────────────────────────
+const pCanvas = document.getElementById('particle-canvas');
+const pCtx = pCanvas.getContext('2d');
+let W, H;
+
+function resizeCanvas() {
+    W = pCanvas.width = window.innerWidth;
+    H = pCanvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+const PCOLS = ['#00ff88','#00e5ff','#bf5fff','#ffd700','#ff00aa'];
+
+class Particle {
+    constructor() { this.reset(true); }
+    reset(init) {
+        this.x = init ? Math.random() * W : (Math.random() < 0.5 ? 0 : W);
+        this.y = init ? Math.random() * H : Math.random() * H;
+        this.vx = (Math.random() - 0.5) * 0.45;
+        this.vy = (Math.random() - 0.5) * 0.45;
+        this.r = Math.random() * 1.8 + 0.4;
+        this.color = PCOLS[Math.floor(Math.random() * PCOLS.length)];
+        this.alpha = Math.random() * 0.55 + 0.1;
+    }
+    update() {
+        this.x += this.vx; this.y += this.vy;
+        if (this.x < -10 || this.x > W + 10 || this.y < -10 || this.y > H + 10) this.reset(false);
+    }
+    draw() {
+        pCtx.save();
+        pCtx.globalAlpha = this.alpha;
+        pCtx.fillStyle = this.color;
+        pCtx.shadowBlur = 8; pCtx.shadowColor = this.color;
+        pCtx.beginPath();
+        pCtx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+        pCtx.fill();
+        pCtx.restore();
+    }
+}
+
+const particles = Array.from({length: 130}, () => new Particle());
+
+function drawLines() {
+    for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const d = Math.sqrt(dx*dx + dy*dy);
+            if (d < 110) {
+                pCtx.save();
+                pCtx.globalAlpha = (1 - d/110) * 0.08;
+                pCtx.strokeStyle = particles[i].color;
+                pCtx.lineWidth = 0.5;
+                pCtx.beginPath();
+                pCtx.moveTo(particles[i].x, particles[i].y);
+                pCtx.lineTo(particles[j].x, particles[j].y);
+                pCtx.stroke();
+                pCtx.restore();
+            }
+        }
+    }
+}
+
+(function animP() {
+    pCtx.clearRect(0, 0, W, H);
+    particles.forEach(p => { p.update(); p.draw(); });
+    drawLines();
+    requestAnimationFrame(animP);
+})();
+
+// ── Nav scroll ───────────────────────────────────
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 60);
+});
+
+// ── Scroll reveal ────────────────────────────────
+function revealCheck() {
+    document.querySelectorAll('.reveal:not(.revealed)').forEach(el => {
+        const r = el.getBoundingClientRect();
+        if (r.top < window.innerHeight - 50) el.classList.add('revealed');
+    });
+}
+window.addEventListener('scroll', revealCheck, { passive: true });
+window.addEventListener('resize', revealCheck, { passive: true });
+// Run on load and after a brief delay to catch anything rendered late
+revealCheck();
+setTimeout(revealCheck, 200);
+setTimeout(revealCheck, 600);
+
+// ── Nav active link ───────────────────────────────
+const navLinks = document.querySelectorAll('.nav-links a');
+function updateActiveNav() {
+    const scrollY = window.scrollY + 120;
+    document.querySelectorAll('section[id]').forEach(s => {
+        if (scrollY >= s.offsetTop && scrollY < s.offsetTop + s.offsetHeight) {
+            navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + s.id));
+        }
+    });
+}
+window.addEventListener('scroll', updateActiveNav, { passive: true });
+
+// ── Smooth links ──────────────────────────────────
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+        e.preventDefault();
+        const el = document.querySelector(a.getAttribute('href'));
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+    });
+});
+
+// ── Stat counters ─────────────────────────────────
+const counterDone = new Set();
+function runCounter(el) {
+    if (counterDone.has(el)) return;
+    counterDone.add(el);
+    const target = +el.dataset.target;
+    const dur = 1600;
+    const start = performance.now();
+    (function tick(now) {
+        const p = Math.min((now - start) / dur, 1);
+        const ease = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(ease * target) + (target >= 99 ? '+' : '');
+        if (p < 1) requestAnimationFrame(tick);
+    })(start);
+}
+function startScramble(el) {
+    if (counterDone.has(el)) return;
+    counterDone.add(el);
+    const digits = +el.dataset.target >= 99 ? 2 : 2;
+    const suffix = +el.dataset.target >= 99 ? '+' : '';
+    setInterval(() => {
+        const n = Math.floor(Math.random() * 89) + 10;
+        el.textContent = n + suffix;
+    }, 55);
+}
+function checkCounters() {
+    document.querySelectorAll('[data-target]').forEach(el => {
+        const r = el.getBoundingClientRect();
+        if (r.top < window.innerHeight - 40) {
+            el.classList.contains('secret') ? startScramble(el) : runCounter(el);
+        }
+    });
+}
+window.addEventListener('scroll', checkCounters, { passive: true });
+setTimeout(checkCounters, 300);
+
+// ── Terminal ──────────────────────────────────────
+const tBody = document.getElementById('t-body');
+const tInput = document.getElementById('t-input');
+const tInputRow = document.getElementById('t-input-row');
+
+document.getElementById('terminal-box').addEventListener('click', () => tInput.focus());
+
+const CMDS = {
+    help: () => [
+        {t:'┌────────────────────────────────────────────┐', c:'i'},
+        {t:'│      CHOCLO CLI — Comandos Disponibles      │', c:'i'},
+        {t:'├────────────────────────────────────────────┤', c:'i'},
+        {t:'│  help           → este menú                │', c:''},
+        {t:'│  show team      → ver el equipo            │', c:''},
+        {t:'│  list projects  → ver proyectos            │', c:''},
+        {t:'│  stack          → tecnologías que usamos   │', c:''},
+        {t:'│  contact        → contacto                 │', c:''},
+        {t:'│  whoami         → sobre el estudio         │', c:''},
+        {t:'│  open portfolio → ir a proyectos           │', c:''},
+        {t:'│  ls / date / clear                         │', c:''},
+        {t:'│  ??? → prueba algo divertido               │', c:'w'},
+        {t:'└────────────────────────────────────────────┘', c:'i'},
+    ],
+    'show team': () => [
+        {t:'◈ Cargando manifiesto del equipo...', c:'i'},
+        {t:'', c:''},
+        {t:'  ⚡ Alejandro Uribe  — Backend + Cloud Engineer', c:'s'},
+        {t:'     codename: Alejoles | alejoles.com', c:'d'},
+        {t:'     Python · Go · FastAPI · AWS · Terraform · Docker', c:'d'},
+        {t:'', c:''},
+        {t:'  ◆ Adrián Alvarez   — Android Developer', c:''},
+        {t:'     Kotlin · Jetpack Compose · MVVM · Firebase', c:'d'},
+        {t:'', c:''},
+        {t:'  ◇ Jafet Vergara   — Full-Stack Developer', c:'i'},
+        {t:'     codename: Eros', c:'d'},
+        {t:'     Laravel · PHP · JavaScript · MySQL · Tailwind', c:'d'},
+        {t:'', c:''},
+        {t:'→ 3 humanos, ∞ commits.', c:'w'},
+    ],
+    'list projects': () => [
+        {t:'◈ Obteniendo manifiesto de proyectos...', c:'i'},
+        {t:'', c:''},
+        {t:'  [WEB]    NexaDash        → Plataforma de analítica', c:'s'},
+        {t:'  [WEB]    FlowBoard       → SaaS gestión de proyectos', c:'s'},
+        {t:'  [APP]    PulseTrack      → App móvil de fitness', c:'i'},
+        {t:'  [APP]    QuickCart       → App de e-commerce', c:'i'},
+        {t:'  [CLOUD]  ChocloInfra     → AWS multi-región', c:'w'},
+        {t:'  [AI]     VisionAI        → API visión por computadora', c:''},
+        {t:'  [AI]     ChatAgent Pro   → Bot de soporte con LLM', c:''},
+        {t:'', c:''},
+        {t:'→ 7 públicos · 5 en modo stealth 🤫', c:'w'},
+    ],
+    contact: () => [
+        {t:'◈ Abriendo canales de comunicación...', c:'i'},
+        {t:'', c:''},
+        {t:'  📧  develoversgroup@gmail.com', c:'s'},
+        {t:'  💬  discord.gg/choclo-studios', c:'i'},
+        {t:'  🐙  github.com/Choclo-Studios', c:''},
+        {t:'  💼  linkedin.com/company/choclo-studios', c:''},
+        {t:'', c:''},
+        {t:'→ Tiempo de respuesta: < 24h en días hábiles', c:'w'},
+    ],
+    whoami: () => [
+        {t:'◈ Cargando perfil del estudio...', c:'i'},
+        {t:'', c:''},
+        {t:'  Choclo Studios es un laboratorio creativo digital', c:''},
+        {t:'  construido por un equipo de desarrolladores', c:''},
+        {t:'  que creen que el buen software cambia vidas.', c:''},
+        {t:'', c:''},
+        {t:'  Hacemos: Full-Stack · Cloud · Mobile · IA', c:''},
+        {t:'  Soñamos en: TypeScript, Python, YAML', c:''},
+        {t:'', c:''},
+        {t:'  Basados en todas partes. Construyendo para todos.', c:'s'},
+        {t:'  root@choclo:~# sudo make it awesome', c:'i'},
+    ],
+    stack: () => [
+        {t:'◈ Leyendo package.json...', c:'i'},
+        {t:'', c:''},
+        {t:'  Frontend  → React, Next.js, TypeScript, Tailwind', c:''},
+        {t:'  Backend   → Node.js, Laravel, FastAPI, GraphQL', c:''},
+        {t:'  Móvil     → Flutter, React Native', c:''},
+        {t:'  Cloud     → AWS, Docker, Kubernetes, Terraform', c:''},
+        {t:'  Base de datos → PostgreSQL, MongoDB, Redis, DynamoDB', c:''},
+        {t:'  AI/ML     → Python, PyTorch, LangChain, OpenAI', c:''},
+        {t:'', c:''},
+        {t:'→ node_modules tiene 847 paquetes. Lo sentimos.', c:'w'},
+    ],
+    'open portfolio': () => [
+        {t:'◈ Launching portfolio viewer...', c:'i'},
+        {t:'⬡ Scrolling to projects...', c:'s'},
+    ],
+    ls: () => [
+        {t:'projects/   team/   cloud/   ai/   secret/', c:''},
+        {t:'README.md   .env   choclito.gif', c:''},
+    ],
+    'cat README.md': () => [
+        {t:'# Choclo Studios', c:'i'},
+        {t:'A digital creative lab. We build things.', c:''},
+        {t:'See CONTRIBUTING.md if you want to join.', c:'w'},
+    ],
+    date: () => [{t: new Date().toUTCString(), c:'i'}],
+    clear: () => 'CLEAR',
+    matrix: () => [
+        {t:'◈ Wake up, Neo...', c:'s'},
+        {t:'  The Matrix has you.', c:''},
+        {t:'  Follow the white rabbit. 🐇', c:'i'},
+    ],
+    sudo: () => [
+        {t:'⚠ sudo: user is not in the sudoers file.', c:'e'},
+        {t:'  This incident will be reported. (just kidding)', c:'w'},
+    ],
+    'rm -rf /': () => [
+        {t:'◈ Initiating planetary destruction...', c:'e'},
+        {t:'  lol no. please don\'t.', c:'w'},
+    ],
+    choclo: () => [
+        {t:'◈ Oh! You found my secret command!', c:'s'},
+        {t:'', c:''},
+        {t:'         ▓▓▓▓▓▓', c:'w'},
+        {t:'       ▓▓ 😎 ▓▓▓▓', c:'w'},
+        {t:'      ▓▓ Choclito ▓', c:'w'},
+        {t:'       ▓▓▓▓▓▓▓▓▓', c:'w'},
+        {t:'', c:''},
+        {t:'  The cyberpunk corn says hi! 🌽', c:'i'},
+        {t:'  Try the Konami code on the page...', c:'w'},
+    ],
+    hack: () => [
+        {t:'INITIATING HACK SEQUENCE...', c:'e'},
+        {t:'> Bypassing firewall....... DONE', c:'s'},
+        {t:'> Cracking passwords....... just kidding', c:'w'},
+        {t:'> We\'re developers, not hackers 😄', c:'i'},
+    ],
+    exit: () => [{t:'◈ You can\'t leave. The terminal has claimed you. 🌽', c:'w'}],
+    ping: () => [
+        {t:'PING choclo.dev 64 bytes', c:''},
+        {t:'64 bytes from 🌽: icmp_seq=1 ttl=64 time=1.33ms', c:'s'},
+        {t:'64 bytes from 🌽: icmp_seq=2 ttl=64 time=0.99ms', c:'s'},
+        {t:'--- choclo.dev ping statistics ---', c:''},
+        {t:'2 packets transmitted, 2 received, 0% packet loss', c:'i'},
+    ],
+};
+
+let cmdHistory = [];
+let histIdx = -1;
+
+function addOut(text, cls = '') {
+    const d = document.createElement('div');
+    d.className = 't-out ' + cls;
+    d.textContent = text;
+    tBody.insertBefore(d, tInputRow);
+    tBody.scrollTop = tBody.scrollHeight;
+    return d;
+}
+
+function typeLines(lines, cb) {
+    let i = 0;
+    (function next() {
+        if (i >= lines.length) { if (cb) cb(); return; }
+        const { t, c } = lines[i++];
+        addOut(t, c === 's' ? 's' : c === 'e' ? 'e' : c === 'i' ? 'i' : c === 'w' ? 'w' : c === 'd' ? 'd' : '');
+        setTimeout(next, 32);
+    })();
+}
+
+function runCmd(raw) {
+    const cmd = raw.trim();
+    const lower = cmd.toLowerCase();
+
+    // Echo
+    const echo = document.createElement('div');
+    echo.className = 't-out';
+    echo.innerHTML = `<span style="color:var(--green)">choclo@studio:~$</span> <span>${raw}</span>`;
+    tBody.insertBefore(echo, tInputRow);
+
+    if (!cmd) { tBody.scrollTop = tBody.scrollHeight; return; }
+
+    cmdHistory.unshift(cmd);
+    histIdx = -1;
+
+    if (lower === 'clear') {
+        const kids = [...tBody.children].filter(c => c !== tInputRow);
+        kids.forEach(k => k.remove());
+        return;
+    }
+
+    if (lower === 'open portfolio') {
+        typeLines(CMDS['open portfolio'](), () => {
+            setTimeout(() => document.getElementById('projects').scrollIntoView({behavior:'smooth'}), 400);
+        });
+        return;
+    }
+
+    const handler = CMDS[lower];
+    if (handler) {
+        const res = handler();
+        if (res && res !== 'CLEAR') typeLines(res);
+    } else {
+        addOut(`command not found: ${cmd}  —  type 'help' for available commands`, 'e');
+        tBody.scrollTop = tBody.scrollHeight;
+    }
+}
+
+tInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+        const v = tInput.value;
+        tInput.value = '';
+        runCmd(v);
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (histIdx < cmdHistory.length - 1) tInput.value = cmdHistory[++histIdx];
+    } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        histIdx > 0 ? (tInput.value = cmdHistory[--histIdx]) : (histIdx = -1, tInput.value = '');
+    } else if (e.key === 'Tab') {
+        e.preventDefault();
+        const partial = tInput.value.toLowerCase();
+        const match = Object.keys(CMDS).find(k => k.startsWith(partial) && k !== partial);
+        if (match) tInput.value = match;
+    }
+});
+
+// ── Team Cards ────────────────────────────────────
+const TEAM = [
+    {
+        name: 'Alejandro Uribe', role: '// Backend + Cloud Engineer',
+        codename: 'Alejoles',
+        bio: 'Diseña y despliega soluciones confiables para equipos que necesitan velocidad sin sacrificar estabilidad. Foco en automatización, observabilidad e infraestructura mantenible.',
+        techs: ['Python','Go','FastAPI','AWS','Terraform','Docker'],
+        emoji: '⚡', ca: '#00ff88', cg: 'linear-gradient(135deg,#00ff88,#00e5ff)',
+        portfolio: 'https://alejoles.com',
+        github: 'https://github.com/alejoles',
+    },
+    {
+        name: 'Adrián Alvarez', role: '// Android Developer',
+        bio: 'Construye aplicaciones móviles eficientes, modernas y escalables. Especialista en el ecosistema Android con Kotlin, arquitecturas limpias y UI declarativa con Compose.',
+        techs: ['Kotlin','Jetpack Compose','MVVM','Firebase','Room','Hilt'],
+        emoji: '◆', photo: 'PerfilAdrian.webp', ca: '#bf5fff', cg: 'linear-gradient(135deg,#bf5fff,#7b42ff)',
+        portfolio: 'https://mi-portafolio-beta-green.vercel.app',
+        github: 'https://github.com/Cordobot',
+        linkedin: 'https://linkedin.com/in/adnalvarez',
+    },
+    {
+        name: 'Jafet Vergara', role: '// Full-Stack Developer',
+        codename: 'Eros',
+        bio: 'Desarrollador web enfocado en construir aplicaciones funcionales y bien estructuradas. Cómodo tanto en el backend como en el frontend, desde Laravel y PHP hasta JavaScript y Tailwind. Código limpio, soluciones con impacto real.',
+        techs: ['Laravel','PHP','JavaScript','MySQL','Tailwind','Python'],
+        emoji: '◇', photo: 'PerfilJafet.png', ca: '#00e5ff', cg: 'linear-gradient(135deg,#00e5ff,#00a3cc)',
+        portfolio: 'https://portfolio-eta-ten-0co03txv1u.vercel.app',
+        github: 'https://github.com/Eros46',
+        linkedin: 'www.linkedin.com/in/jafet-steven-vergara-reyes-8642b4270',
+    },
+];
+
+const teamGrid = document.getElementById('team-grid');
+TEAM.forEach((m, i) => {
+    const card = document.createElement('div');
+    card.className = 'team-card reveal';
+    card.style.cssText = `--ca:${m.ca}; transition-delay:${i*0.1}s`;
+
+    const codenameBadge = m.codename
+        ? `<div class="c-codename">${m.codename}</div>`
+        : '';
+
+    const links = [];
+    if (m.portfolio) links.push(`<a href="${m.portfolio}" target="_blank" class="c-link">◉ Portfolio</a>`);
+    if (m.github)    links.push(`<a href="${m.github}"    target="_blank" class="c-link">⬡ GitHub</a>`);
+    if (m.linkedin)  links.push(`<a href="${m.linkedin}"  target="_blank" class="c-link">◈ LinkedIn</a>`);
+    if (!links.length) {
+        links.push(`<a href="#" class="c-link">⬡ GitHub</a>`);
+        links.push(`<a href="#" class="c-link">◈ LinkedIn</a>`);
+    }
+
+    const avatarInner = m.photo
+        ? `<img src="${m.photo}" alt="${m.name}" class="c-avatar-img">`
+        : m.emoji;
+
+    card.innerHTML = `
+        <div class="c-avatar" style="${m.photo ? '' : `background:${m.cg}`}">${avatarInner}</div>
+        <div class="c-name">${m.name}</div>
+        ${codenameBadge}
+        <div class="c-role">${m.role}</div>
+        <div class="c-bio">${m.bio}</div>
+        <div class="c-tags">${m.techs.map(t=>`<span class="c-tag">${t}</span>`).join('')}</div>
+        <div class="c-links">${links.join('')}</div>`;
+
+    if (m.portfolio) { card.style.cursor = 'pointer'; card.classList.add('card-link'); }
+
+    card.addEventListener('click', () => {
+        if (m.portfolio) window.open(m.portfolio, '_blank', 'noopener');
+    });
+
+    card.addEventListener('mousemove', e => {
+        const r = card.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width - 0.5;
+        const y = (e.clientY - r.top) / r.height - 0.5;
+        card.style.transform = `perspective(900px) rotateX(${-y*10}deg) rotateY(${x*10}deg) translateY(-4px)`;
+    });
+    card.addEventListener('mouseleave', () => {
+        card.style.transition = 'transform 0.5s cubic-bezier(0.16,1,0.3,1), border-color 0.3s, box-shadow 0.3s';
+        card.style.transform = '';
+        setTimeout(() => card.style.transition = '', 500);
+    });
+
+    teamGrid.appendChild(card);
+});
+
+// ── Bento Projects ────────────────────────────────
+const PROJECTS = [
+    {
+        cat:'Plataforma Web', title:'⬡ NexaDash', icon:'◉',
+        desc:'Dashboard de analítica en tiempo real con insights impulsados por IA, gráficos en vivo y colaboración en equipo.',
+        tags:['React','D3.js','Node.js','AWS'], color:'#00ff88',
+        preview:'linear-gradient(135deg,rgba(0,255,136,0.15),rgba(0,229,255,0.08))',
+        cls:'bc-w2',
+    },
+    {
+        cat:'App Móvil', title:'♡ PulseTrack', icon:'♡',
+        desc:'Tracker de fitness multiplataforma con predicciones de salud por ML y una interfaz glassmorphism hermosa.',
+        tags:['Flutter','Firebase','Python'], color:'#bf5fff',
+        preview:'linear-gradient(135deg,rgba(191,95,255,0.15),rgba(255,0,170,0.08))',
+        cls:'bc-h2',
+    },
+    {
+        cat:'Infraestructura Cloud', title:'☁ ChocloInfra', icon:'☁',
+        desc:'Setup multi-región en AWS con auto-scaling, CDN, despliegues sin downtime e infraestructura como código.',
+        tags:['AWS','Terraform','Docker'], color:'#00e5ff',
+        preview:'linear-gradient(135deg,rgba(0,229,255,0.15),rgba(0,136,255,0.08))',
+        cls:'',
+    },
+    {
+        cat:'Proyecto IA', title:'◎ VisionAI', icon:'◎',
+        desc:'API de detección de objetos y comprensión de escenas. Visión por computadora lista para integrar en cualquier app.',
+        tags:['Python','PyTorch','FastAPI'], color:'#ffd700',
+        preview:'linear-gradient(135deg,rgba(255,215,0,0.15),rgba(255,107,0,0.08))',
+        cls:'',
+    },
+    {
+        cat:'Plataforma SaaS', title:'⬡ FlowBoard', icon:'⬡',
+        desc:'Gestión de proyectos asistida por IA. Priorización inteligente de tareas e insights de velocidad del equipo.',
+        tags:['Next.js','Prisma','OpenAI'], color:'#ff00aa',
+        preview:'linear-gradient(135deg,rgba(255,0,170,0.15),rgba(191,95,255,0.08))',
+        cls:'',
+    },
+    {
+        cat:'Agente IA', title:'◈ ChatAgent Pro', icon:'◈',
+        desc:'Automatización de soporte con LLMs, conversaciones multi-turno con contexto y analítica integrada.',
+        tags:['LangChain','OpenAI','Redis'], color:'#00ff88',
+        preview:'linear-gradient(135deg,rgba(0,255,136,0.15),rgba(0,255,255,0.08))',
+        cls:'bc-w2',
+    },
+];
+
+const bento = document.getElementById('bento');
+PROJECTS.forEach((p, i) => {
+    const card = document.createElement('div');
+    card.className = `bc reveal ${p.cls}`;
+    card.style.cssText = `--pc:${p.color}; --pp:${p.preview}; transition-delay:${i*0.07}s`;
+    card.innerHTML = `
+        <div class="p-glow" style="--pc:${p.color}"></div>
+        <div class="p-wip">⚙ En construcción</div>
+        <div class="p-cat">${p.cat}</div>
+        <div class="p-body">
+            <div class="p-title">${p.title}</div>
+            <div class="p-desc">${p.desc}</div>
+            <div class="p-preview">
+                <span class="p-preview-icon">${p.icon}</span>
+                <div class="p-preview-lines"></div>
+            </div>
+            <div class="p-tags">${p.tags.map(t=>`<span class="p-tag">${t}</span>`).join('')}</div>
+        </div>`;
+
+    card.addEventListener('mousemove', e => {
+        const r = card.getBoundingClientRect();
+        card.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100).toFixed(1) + '%');
+        card.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100).toFixed(1) + '%');
+    });
+
+    bento.appendChild(card);
+});
+
+// ── Tech Orbit ────────────────────────────────────
+const TECHS = [
+    // Ring 1 (inner, radius ~100px, CW)
+    { name:'React',      icon:'⚛',  color:'#61DAFB', ring:1, a: 0,          speed: 0.007 },
+    { name:'Node.js',    icon:'◉',  color:'#339933', ring:1, a: 2.094,      speed: 0.007 },
+    { name:'AWS',        icon:'☁',  color:'#FF9900', ring:1, a: 4.189,      speed: 0.007 },
+    // Ring 2 (mid, radius ~175px, CCW)
+    { name:'Next.js',    icon:'▲',  color:'#ffffff', ring:2, a: 0,          speed:-0.005 },
+    { name:'Docker',     icon:'◫',  color:'#2496ED', ring:2, a: 1.257,      speed:-0.005 },
+    { name:'Python',     icon:'⬡',  color:'#FFE873', ring:2, a: 2.513,      speed:-0.005 },
+    { name:'MongoDB',    icon:'◈',  color:'#47A248', ring:2, a: 3.770,      speed:-0.005 },
+    { name:'Flutter',    icon:'◆',  color:'#54C5F8', ring:2, a: 5.027,      speed:-0.005 },
+    // Ring 3 (outer, radius ~240px, CW)
+    { name:'Laravel',    icon:'♦',  color:'#FF2D20', ring:3, a: 0,          speed: 0.003 },
+    { name:'TypeScript', icon:'TS', color:'#3178C6', ring:3, a: 0.898,      speed: 0.003 },
+    { name:'Kubernetes', icon:'⬢',  color:'#326CE5', ring:3, a: 1.795,      speed: 0.003 },
+    { name:'Redis',      icon:'◎',  color:'#DC382D', ring:3, a: 2.693,      speed: 0.003 },
+    { name:'Terraform',  icon:'◬',  color:'#7B42BC', ring:3, a: 3.590,      speed: 0.003 },
+    { name:'GraphQL',    icon:'◇',  color:'#E10098', ring:3, a: 4.488,      speed: 0.003 },
+    { name:'PostgreSQL', icon:'⬥',  color:'#4169E1', ring:3, a: 5.386,      speed: 0.003 },
+];
+
+const RADII = { 1: 100, 2: 178, 3: 244 };
+const stage = document.getElementById('orbit-stage');
+const cx0 = 260, cy0 = 260;
+
+// Size orbit ring visuals (CSS handles centering via top:50%/left:50% + negative margins)
+[1,2,3].forEach(n => {
+    const r = RADII[n];
+    const el = document.getElementById('ov'+n);
+    el.style.width  = r*2 + 'px';
+    el.style.height = r*2 + 'px';
+    el.style.marginLeft = -r + 'px';
+    el.style.marginTop  = -r + 'px';
+});
+
+// Create icon elements
+TECHS.forEach(t => {
+    const el = document.createElement('div');
+    el.className = 'orbit-icon';
+    el.style.setProperty('--ic', t.color);
+    el.innerHTML = `
+        <span class="oi" style="color:${t.color}; font-family:${t.icon.length>2?'var(--mono)':'inherit'}; font-size:${t.icon.length>2?'0.65rem':'1.1rem'}; font-weight:bold">${t.icon}</span>
+        <span class="ol">${t.name}</span>`;
+    stage.appendChild(el);
+    t.el = el;
+});
+
+// Detect mobile for smaller orbit
+function getScale() {
+    const w = window.innerWidth;
+    if (w < 400) return 0.55;
+    if (w < 600) return 0.65;
+    if (w < 900) return 0.8;
+    return 1;
+}
+
+(function animOrbit() {
+    const scale = getScale();
+    TECHS.forEach(t => {
+        t.a += t.speed;
+        const r = RADII[t.ring] * scale;
+        const x = cx0 * scale + Math.cos(t.a) * r;
+        const y = cy0 * scale + Math.sin(t.a) * r;
+        t.el.style.left = x + 'px';
+        t.el.style.top  = y + 'px';
+    });
+    requestAnimationFrame(animOrbit);
+})();
+
+// Resize orbit stage for mobile
+function resizeOrbit() {
+    const scale = getScale();
+    stage.style.width  = Math.round(520 * scale) + 'px';
+    stage.style.height = Math.round(520 * scale) + 'px';
+    [1,2,3].forEach(n => {
+        const r = RADII[n] * scale;
+        const el = document.getElementById('ov'+n);
+        el.style.width  = r*2 + 'px';
+        el.style.height = r*2 + 'px';
+        el.style.marginLeft = -r + 'px';
+        el.style.marginTop  = -r + 'px';
+    });
+}
+resizeOrbit();
+window.addEventListener('resize', resizeOrbit);
+
+// ── Mascot ────────────────────────────────────────
+// Show after scroll
+let mascotShown = false;
+window.addEventListener('scroll', () => {
+    if (!mascotShown && window.scrollY > 600) {
+        mascotShown = true;
+        document.getElementById('mascot').classList.add('vis');
+    }
+});
+
+document.getElementById('mascot').addEventListener('click', () => {
+    triggerGlitch();
+    console.log('%c🌽 You found Choclito! Easter egg unlocked!', 'color:#ffd700; font-size:18px; font-weight:bold;');
+    console.log('%cTry typing "choclo" in the terminal for a surprise!', 'color:#00ff88; font-size:13px;');
+});
+
+// ── Glitch effect ─────────────────────────────────
+const glitchLayer = document.getElementById('glitch-layer');
+function triggerGlitch() {
+    glitchLayer.classList.add('flash');
+    setTimeout(() => glitchLayer.classList.remove('flash'), 450);
+}
+
+// ── Konami Code ───────────────────────────────────
+const KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+let ki = 0;
+document.addEventListener('keydown', e => {
+    ki = e.key === KONAMI[ki] ? ki + 1 : 0;
+    if (ki === KONAMI.length) {
+        ki = 0;
+        onKonami();
+    }
+});
+
+function onKonami() {
+    triggerGlitch();
+    const el = document.createElement('div');
+    el.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9999;font-family:var(--display);font-size:clamp(1.5rem,5vw,2.5rem);color:var(--purple);text-shadow:0 0 30px var(--purple);text-align:center;pointer-events:none;animation:slideUp 0.4s ease;';
+    el.innerHTML = '⬡ +30 LIVES ⬡<br><span style="font-size:0.5em;color:var(--muted)">konami unlocked</span>';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2500);
+    console.log('%c⬡ KONAMI CODE! +30 lives granted', 'color:#bf5fff; font-size:20px; font-weight:bold;');
+    // Spawn extra particles
+    for (let i = 0; i < 40; i++) {
+        const p = new Particle();
+        p.r = 5; p.vy = -3; p.vx = (Math.random()-0.5)*4;
+        p.x = Math.random() * W; p.y = H;
+        particles.push(p);
+    }
+    setTimeout(() => particles.splice(130), 5000);
+}
+
+// ── Easter egg: click title ───────────────────────
+document.querySelector('.hero-title').addEventListener('click', () => {
+    triggerGlitch();
+});
+
+// ── Console messages ──────────────────────────────
+console.log('%c  ██████╗██╗  ██╗ ██████╗  ██████╗██╗      ██████╗  ', 'color:#00ff88; font-family:monospace; font-size:10px;');
+console.log('%c ██╔════╝██║  ██║██╔═══██╗██╔════╝██║     ██╔═══██╗ ', 'color:#00ff88; font-family:monospace; font-size:10px;');
+console.log('%c ██║     ███████║██║   ██║██║     ██║     ██║   ██║ ', 'color:#00e5ff; font-family:monospace; font-size:10px;');
+console.log('%c ╚██████╗██║  ██║╚██████╔╝╚██████╗███████╗╚██████╔╝ ', 'color:#ffd700; font-family:monospace; font-size:10px;');
+console.log('%c  ╚═════╝╚═╝  ╚═╝ ╚═════╝  ╚═════╝╚══════╝ ╚═════╝ ', 'color:#ffd700; font-family:monospace; font-size:10px;');
+console.log('%c🌽 STUDIOS — Digital Creative Lab', 'color:#ffd700; font-size:16px; font-weight:bold; margin:8px 0;');
+console.log('%c👋 Hey curious developer!', 'color:#00ff88; font-size:14px;');
+console.log('%cYou peeked at the console. Respect. 🍪', 'color:#e0e0f0; font-size:12px;');
+console.log('%cTry: type "choclo" in the terminal, or the Konami code on the page.', 'color:#5a5a8a; font-size:11px;');
+</script>
+</body>
+</html>
